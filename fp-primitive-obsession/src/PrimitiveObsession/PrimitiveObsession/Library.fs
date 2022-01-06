@@ -8,6 +8,7 @@ module Finance =
 
   type ExchangeRate =
     | Rate of float
+
     static member (/)(Rate a, Rate b) = (a / b) |> Rate
 
     static member get =
@@ -65,8 +66,10 @@ type ProfitCalculator(localCurrency: Currency) =
         Currency = localAmount.Currency }
 
   member this.calculateProfit =
+    let tax = this.calculateTax
+
     foreignAmount
     |> add localAmount
     |> add
-         { this.calculateTax with
+         { tax with
              Amount = -this.calculateTax.Amount }
