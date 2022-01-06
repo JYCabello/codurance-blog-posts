@@ -1,6 +1,6 @@
-﻿namespace PrimitiveObsession.Original
+﻿namespace PrimitiveObsession.Excercise
 
-type ProfitCalculatorOriginal(localCurrency: string) =
+type ProfitCalculator(localCurrency: string) =
   let rates =
     [ ("GBP", 1.0)
       ("USD", 1.6)
