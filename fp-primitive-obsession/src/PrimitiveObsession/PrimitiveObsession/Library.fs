@@ -29,6 +29,10 @@ module Finance =
     |> applyRate other.Amount
     |> fun amount -> { Amount = local.Amount + amount; Currency = local.Currency }
 
+  type Transaction =
+  | Incoming of Money
+  | Outgoing of Money
+
 
 open Finance
 
