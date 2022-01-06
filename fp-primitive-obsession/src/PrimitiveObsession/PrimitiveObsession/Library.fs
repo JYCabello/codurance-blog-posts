@@ -1,13 +1,26 @@
 ﻿namespace PrimitiveObsession.Excercise
 
-type Currency = GBP | USD | EUR
+type Currency =
+  | GBP
+  | USD
+  | EUR
 
-type ProfitCalculator(localCurrency: Currency) =
+type ExchangeRate =
+  | Rate of float
+  static member (/)(Rate a, Rate b) = (a / b) |> Rate
+
+module ProfitCalculator =
+  let applyRate amount rate =
+    match rate with
+    | Rate r -> ((amount |> float) / r) |> int
+
   let getRate =
     function
-    | GBP -> 1.0
-    | USD -> 1.6
-    | EUR -> 1.2
+    | GBP -> Rate 1.0
+    | USD -> Rate 1.6
+    | EUR -> Rate 1.2
+
+type ProfitCalculator(localCurrency: Currency) =
 
   let mutable localAmount = 0
   let mutable foreignAmount = 0
@@ -15,9 +28,11 @@ type ProfitCalculator(localCurrency: Currency) =
   member _.add amount currency incoming =
     let mutable realAmount: int = amount
 
-    let exchangeRate = (getRate currency) / (getRate localCurrency)
+    let exchangeRate =
+      (ProfitCalculator.getRate currency)
+      / (ProfitCalculator.getRate localCurrency)
 
-    realAmount <- ((realAmount |> float) / exchangeRate) |> int
+    realAmount <- ProfitCalculator.applyRate realAmount exchangeRate
 
     if not incoming then
       do realAmount <- -realAmount
