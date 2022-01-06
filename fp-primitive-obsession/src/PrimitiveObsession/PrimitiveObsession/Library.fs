@@ -44,8 +44,10 @@ type ProfitCalculator(localCurrency: Currency) =
 
   let mutable localAmount = { Amount = 0; Currency = localCurrency }
   let mutable foreignAmount = { Amount = 0; Currency = localCurrency }
+  let mutable transactions: Transaction list = []
 
   member _.add transaction =
+    transactions <- transaction :: transactions
     let money =
       match transaction with
       | Incoming i -> i
