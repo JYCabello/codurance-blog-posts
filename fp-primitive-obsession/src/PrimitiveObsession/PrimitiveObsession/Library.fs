@@ -66,23 +66,14 @@ open Finance
 
 
 type ProfitCalculator(localCurrency: Currency) =
-
-  let mutable foreignAmount = { Amount = 0; Currency = localCurrency }
   let mutable transactions: Transaction list = []
 
   member _.add transaction =
     transactions <- transaction :: transactions
 
-    let money =
-      match transaction with
-      | Incoming i -> i
-      | Outgoing o -> o
-
-    if money.Currency = localCurrency |> not then
-      do foreignAmount <- foreignAmount + money
-
   member _.calculateTax =
     let localAmount = amountIn localCurrency transactions
+
     match amountIn localAmount.Currency transactions with
     | money when money.Amount < 0 -> { money with Amount = 0 }
     | money ->
@@ -91,7 +82,8 @@ type ProfitCalculator(localCurrency: Currency) =
 
   member this.calculateProfit =
     let tax = this.calculateTax
+
     amountIn localCurrency transactions
-    + foreignAmount
+    + amountNotIn localCurrency transactions
     + { tax with
           Amount = -this.calculateTax.Amount }
