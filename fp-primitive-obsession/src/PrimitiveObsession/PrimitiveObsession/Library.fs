@@ -89,4 +89,4 @@ type ProfitCalculator(localCurrency: Currency) =
     localAmount
     + foreignAmount
     + { tax with
-           Amount = -this.calculateTax.Amount }
+          Amount = -this.calculateTax.Amount }
