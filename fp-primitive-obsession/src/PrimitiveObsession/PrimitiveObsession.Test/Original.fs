@@ -4,18 +4,18 @@ open System
 open PrimitiveObsession
 open Xunit
 
-let eurCalculator = ProfitCalculator("EUR")
+let eurCalculator = ProfitCalculatorOriginal("EUR")
 
 [<Fact>]
 let ``Calculates the tax at 20 percent`` () =
-  let calculator = ProfitCalculator("GBP")
+  let calculator = ProfitCalculatorOriginal("GBP")
   calculator.add 500 "GBP" true
   Assert.Equal(400, calculator.calculateProfit)
   Assert.Equal(100, calculator.calculateTax)
 
 [<Fact>]
 let ``Calculates the tax of multiple amounts`` () =
-  let calculator = ProfitCalculator("GBP")
+  let calculator = ProfitCalculatorOriginal("GBP")
   calculator.add 120 "GBP" true
   calculator.add 200 "GBP" true
   Assert.Equal(256, calculator.calculateProfit)
@@ -23,7 +23,7 @@ let ``Calculates the tax of multiple amounts`` () =
 
 [<Fact>]
 let ``Different currencies are not taxed`` () =
-  let calculator = ProfitCalculator("GBP")
+  let calculator = ProfitCalculatorOriginal("GBP")
   calculator.add 120 "GBP" true
   calculator.add 200 "USD" true
   Assert.Equal(221, calculator.calculateProfit)
@@ -31,7 +31,7 @@ let ``Different currencies are not taxed`` () =
 
 [<Fact>]
 let ``Handles outgoins`` () =
-  let calculator = ProfitCalculator("GBP")
+  let calculator = ProfitCalculatorOriginal("GBP")
   calculator.add 500 "GBP" true
   calculator.add 80 "USD" true
   calculator.add 360 "EUR" false
@@ -40,7 +40,7 @@ let ``Handles outgoins`` () =
 
 [<Fact>]
 let ``A negative balance results in no tax`` () =
-  let calculator = ProfitCalculator("GBP")
+  let calculator = ProfitCalculatorOriginal("GBP")
   calculator.add 500 "GBP" true
   calculator.add 200 "GBP" false
   calculator.add 400 "GBP" false
@@ -50,7 +50,7 @@ let ``A negative balance results in no tax`` () =
 
 [<Fact>]
 let ``Everything is reported in the local currency`` () =
-  let calculator = ProfitCalculator("EUR")
+  let calculator = ProfitCalculatorOriginal("EUR")
   calculator.add 400 "GBP" true
   calculator.add 200 "USD" false
   calculator.add 200 "EUR" true
