@@ -1,32 +1,23 @@
 ﻿namespace PrimitiveObsession.Excercise
 
-type ProfitCalculator(localCurrency: string) =
-  let rates =
-    [ ("GBP", 1.0)
-      ("USD", 1.6)
-      ("EUR", 1.2) ]
-    |> Map.ofSeq
+type Currency = GBP | USD | EUR
+
+type ProfitCalculator(localCurrency: Currency) =
+  let getRate =
+    function
+    | GBP -> 1.0
+    | USD -> 1.6
+    | EUR -> 1.2
 
   let mutable localAmount = 0
   let mutable foreignAmount = 0
 
-  do
-    try
-      rates.[localCurrency] |> ignore
-    with
-    | _ -> invalidArg (nameof localCurrency) "Was not a valid currency"
-
   member _.add amount currency incoming =
     let mutable realAmount: int = amount
 
-    let exchangeRate =
-      rates.TryFind currency
-      |> Option.map (fun incomingRate -> incomingRate / rates.[localCurrency])
+    let exchangeRate = (getRate currency) / (getRate localCurrency)
 
-    realAmount <-
-      exchangeRate
-      |> Option.map (fun rate -> ((realAmount |> float) / rate) |> int)
-      |> Option.defaultValue realAmount
+    realAmount <- ((realAmount |> float) / exchangeRate) |> int
 
     if not incoming then
       do realAmount <- -realAmount
