@@ -36,6 +36,11 @@ module Finance =
     | Incoming of Money
     | Outgoing of Money
 
+  let isIn currency =
+    function
+    | Incoming i -> i.Currency = currency
+    | Outgoing o -> o.Currency = currency
+
 
 open Finance
 
