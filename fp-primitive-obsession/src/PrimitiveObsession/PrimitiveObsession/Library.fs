@@ -23,14 +23,16 @@ module Finance =
     match rate with
     | Rate r -> ((amount |> float) / r) |> int
 
-  type Money = { Amount: int; Currency: Currency }
+  type Money =
+    { Amount: int
+      Currency: Currency }
+    static member (+)(local: Money, other: Money) =
+      other.Currency >>=> local.Currency
+      |> applyRate other.Amount
+      |> fun amount ->
+           { Amount = local.Amount + amount
+             Currency = local.Currency }
 
-  let (++) local other =
-    other.Currency >>=> local.Currency
-    |> applyRate other.Amount
-    |> fun amount ->
-         { Amount = local.Amount + amount
-           Currency = local.Currency }
 
   type Transaction =
     | Incoming of Money
@@ -50,7 +52,7 @@ module Finance =
               | Incoming i -> i
               | Outgoing o -> o
 
-            acc ++ money)
+            acc + money)
 
 open Finance
 
@@ -70,9 +72,9 @@ type ProfitCalculator(localCurrency: Currency) =
       | Outgoing o -> o
 
     if money.Currency = localAmount.Currency then
-      do localAmount <- localAmount ++ money
+      do localAmount <- localAmount + money
     else
-      do foreignAmount <- foreignAmount ++ money
+      do foreignAmount <- foreignAmount + money
 
   member _.calculateTax =
     match amountIn localAmount.Currency transactions with
@@ -85,6 +87,6 @@ type ProfitCalculator(localCurrency: Currency) =
     let tax = this.calculateTax
 
     localAmount
-    ++ foreignAmount
-    ++ { tax with
+    + foreignAmount
+    + { tax with
            Amount = -this.calculateTax.Amount }
