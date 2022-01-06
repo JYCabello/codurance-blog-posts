@@ -28,7 +28,7 @@ type ProfitCalculator(localCurrency: string) =
       |> Option.map (fun rate -> ((realAmount |> float) / rate) |> int)
       |> Option.defaultValue realAmount
 
-    if incoming then
+    if not incoming then
       do realAmount <- -realAmount
 
     if localCurrency = currency then
