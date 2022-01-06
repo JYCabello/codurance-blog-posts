@@ -43,8 +43,10 @@ module Finance =
     | Incoming i -> i.Currency = currency
     | Outgoing o -> o.Currency = currency
 
-  let amountIn currency transactions =
-    ({ Amount = 0; Currency = currency }, transactions |> List.filter (isIn currency))
+  let isNotIn currency = isIn currency >> not
+
+  let private amount currency transactions =
+    ({ Amount = 0; Currency = currency }, transactions)
     ||> List.fold
           (fun acc trx ->
             let money =
@@ -53,6 +55,12 @@ module Finance =
               | Outgoing o -> o
 
             acc + money)
+
+  let amountIn currency transactions =
+    amount currency (transactions |> List.filter (isIn currency))
+
+  let amountNotIn currency transactions =
+    amount currency (transactions |> List.filter (isNotIn currency))
 
 open Finance
 
