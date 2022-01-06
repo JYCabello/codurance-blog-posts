@@ -75,13 +75,11 @@ type ProfitCalculator(localCurrency: Currency) =
       do foreignAmount <- add foreignAmount money
 
   member _.calculateTax =
-    match localAmount.Amount with
-    | amount when amount < 0 ->
-      { Amount = 0
-        Currency = localAmount.Currency }
-    | amount ->
-      { Amount = ((amount |> float) * 0.2) |> int
-        Currency = localAmount.Currency }
+    match amountIn localAmount.Currency transactions with
+    | money when money.Amount < 0 -> { money with Amount = 0 }
+    | money ->
+      { money with
+          Amount = ((money.Amount |> float) * 0.2) |> int }
 
   member this.calculateProfit =
     let tax = this.calculateTax
