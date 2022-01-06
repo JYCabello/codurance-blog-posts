@@ -41,6 +41,16 @@ module Finance =
     | Incoming i -> i.Currency = currency
     | Outgoing o -> o.Currency = currency
 
+  let amountIn currency transactions =
+    ({ Amount = 0; Currency = currency }, transactions |> List.filter (isIn currency))
+    ||> List.fold
+          (fun acc trx ->
+            let money =
+              match trx with
+              | Incoming i -> i
+              | Outgoing o -> o
+
+            add acc money)
 
 open Finance
 
@@ -53,10 +63,11 @@ type ProfitCalculator(localCurrency: Currency) =
 
   member _.add transaction =
     transactions <- transaction :: transactions
+
     let money =
       match transaction with
       | Incoming i -> i
-      | Outgoing o -> { o with Amount = -o.Amount }
+      | Outgoing o -> o
 
     if money.Currency = localAmount.Currency then
       do localAmount <- add localAmount money
