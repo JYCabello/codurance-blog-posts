@@ -62,7 +62,30 @@ module Finance =
   let amountNotIn currency transactions =
     amount currency (transactions |> List.filter (isNotIn currency))
 
+  type Balance =
+    { Transactions: Transaction list
+      LocalCurrency: Currency }
+
 open Finance
+
+module ProfitCalculator =
+  let add transaction balance =
+    { balance with
+        Transactions = transaction :: balance.Transactions }
+
+  let calculateTax balance =
+    match amountIn balance.LocalCurrency balance.Transactions with
+    | money when money.Amount < 0 -> { money with Amount = 0 }
+    | money ->
+      { money with
+          Amount = ((money.Amount |> float) * 0.2) |> int }
+
+  let calculateProfit balance =
+    let tax = calculateTax balance
+
+    amountIn balance.LocalCurrency balance.Transactions
+    + amountNotIn balance.LocalCurrency balance.Transactions
+    + { tax with Amount = -tax.Amount }
 
 
 type ProfitCalculator(localCurrency: Currency) =
@@ -72,9 +95,7 @@ type ProfitCalculator(localCurrency: Currency) =
     transactions <- transaction :: transactions
 
   member _.calculateTax =
-    let localAmount = amountIn localCurrency transactions
-
-    match amountIn localAmount.Currency transactions with
+    match amountIn localCurrency transactions with
     | money when money.Amount < 0 -> { money with Amount = 0 }
     | money ->
       { money with
