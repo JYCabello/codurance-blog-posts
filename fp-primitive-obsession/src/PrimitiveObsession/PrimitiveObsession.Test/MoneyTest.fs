@@ -17,6 +17,7 @@ let ``Converts between currencies`` () =
   let second = { Amount = 100; Currency = EUR }
   let result = add first second
   Assert.Equal({ Amount = 183; Currency = GBP }, result)
+
   match result.Currency with
   | GBP -> ()
   | _ -> failwith "Expected GBP"

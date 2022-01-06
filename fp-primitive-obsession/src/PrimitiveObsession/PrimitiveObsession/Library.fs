@@ -27,11 +27,13 @@ module Finance =
   let add local other =
     other.Currency >>=> local.Currency
     |> applyRate other.Amount
-    |> fun amount -> { Amount = local.Amount + amount; Currency = local.Currency }
+    |> fun amount ->
+         { Amount = local.Amount + amount
+           Currency = local.Currency }
 
   type Transaction =
-  | Incoming of Money
-  | Outgoing of Money
+    | Incoming of Money
+    | Outgoing of Money
 
 
 open Finance
@@ -42,8 +44,11 @@ type ProfitCalculator(localCurrency: Currency) =
   let mutable localAmount = { Amount = 0; Currency = localCurrency }
   let mutable foreignAmount = { Amount = 0; Currency = localCurrency }
 
-  member _.add money incoming =
-    let money = if incoming then money else { money with Amount = -money.Amount }
+  member _.add transaction =
+    let money =
+      match transaction with
+      | Incoming i -> i
+      | Outgoing o -> { o with Amount = -o.Amount }
 
     if money.Currency = localAmount.Currency then
       do localAmount <- add localAmount money
@@ -52,10 +57,16 @@ type ProfitCalculator(localCurrency: Currency) =
 
   member _.calculateTax =
     match localAmount.Amount with
-    | amount when amount < 0 -> { Amount = 0; Currency = localAmount.Currency }
-    | amount -> { Amount = ((amount |> float) * 0.2) |> int; Currency = localAmount.Currency }
+    | amount when amount < 0 ->
+      { Amount = 0
+        Currency = localAmount.Currency }
+    | amount ->
+      { Amount = ((amount |> float) * 0.2) |> int
+        Currency = localAmount.Currency }
 
   member this.calculateProfit =
     foreignAmount
     |> add localAmount
-    |> add { this.calculateTax with Amount = -this.calculateTax.Amount }
+    |> add
+         { this.calculateTax with
+             Amount = -this.calculateTax.Amount }
