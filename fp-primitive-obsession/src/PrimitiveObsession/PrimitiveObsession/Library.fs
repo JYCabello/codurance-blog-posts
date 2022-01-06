@@ -36,6 +36,10 @@ type ProfitCalculator(localCurrency: string) =
     else
       do foreignAmount <- foreignAmount + realAmount
 
-  member _.calculateTax = if localAmount < 0 then 0 else ((localAmount |> float) * 0.2) |> int
+  member _.calculateTax =
+    match localAmount with
+    | amount when amount < 0 -> 0
+    | amount -> ((amount |> float) * 0.2) |> int
 
-  member this.calculateProfit = localAmount - this.calculateTax + foreignAmount
+  member this.calculateProfit =
+    localAmount - this.calculateTax + foreignAmount
