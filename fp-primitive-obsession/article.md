@@ -462,16 +462,26 @@ module Finance =
     | Incoming of Money
     | Outgoing of Money
 
-  // The aforementioned entity, which will replace the Items collection suggested in the excercise.
-  type Balance =
-    { Transactions: Transaction list
-      LocalCurrency: Currency }
-
   // The "money" function I skipped before, I found a use for it now.
   let money =
     function
     | Incoming incoming -> incoming
     | Outgoing outgoing -> outgoing
+
+  type Transactions = Transactions of Transaction list
+
+  let (-->) transaction =
+    function
+    | Transactions transactions -> Transactions <| transaction :: transactions
+
+  let transactionList =
+    function
+    | Transactions transactions -> transactions
+
+  // The aforementioned entity, which will replace the Items collection suggested in the excercise.
+  type Balance =
+    { Transactions: Transaction list
+      LocalCurrency: Currency }
 
   let isIn currency transaction =
     transaction
@@ -481,7 +491,7 @@ module Finance =
   let isNotIn currency = isIn currency >> not
 
   let private amount currency transactions =
-    let aggregate moneySoFar transaction = (transaction |> money) + moneySoFar
+    let aggregate acc trx = acc + (trx |> money)
 
     ({ Amount = 0; Currency = currency }, transactions)
     ||> List.fold aggregate
@@ -492,12 +502,14 @@ module Finance =
     amount
       balance.LocalCurrency
       (balance.Transactions
+       |> transactionList
        |> List.filter (isIn balance.LocalCurrency))
 
   let taxFreeAmount balance =
     amount
       balance.LocalCurrency
       (balance.Transactions
+       |> transactionList
        |> List.filter (isNotIn balance.LocalCurrency))
 
 open Finance
@@ -505,7 +517,7 @@ open Finance
 module ProfitCalculator =
   let add transaction balance =
     { balance with
-        Transactions = transaction :: balance.Transactions }
+        Transactions = transaction --> balance.Transactions }
 
   let calculateTax balance =
     match taxableAmount balance with
@@ -518,8 +530,8 @@ module ProfitCalculator =
     let tax = calculateTax balance
 
     taxableAmount balance
-    + { tax with Amount = -tax.Amount }
     + taxFreeAmount balance
+    + { tax with Amount = -tax.Amount }
 ```
 ## So, what about calisthenics?
 1. Only One Level Of Indentation Per Method ❌
