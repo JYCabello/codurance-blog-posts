@@ -46,10 +46,10 @@ module Finance =
     { Transactions: Transaction list
       LocalCurrency: Currency }
 
-  let isIn currency =
-    function
-    | Incoming i -> i.Currency = currency
-    | Outgoing o -> o.Currency = currency
+  let isIn currency transaction =
+    transaction
+    |> money
+    |> fun money -> money.Currency = currency
 
   let isNotIn currency = isIn currency >> not
 
