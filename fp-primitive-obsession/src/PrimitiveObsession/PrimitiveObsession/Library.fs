@@ -37,6 +37,10 @@ module Finance =
     | Incoming of Money
     | Outgoing of Money
 
+  type Balance =
+    { Transactions: Transaction list
+      LocalCurrency: Currency }
+
   let isIn currency =
     function
     | Incoming i -> i.Currency = currency
@@ -55,15 +59,11 @@ module Finance =
 
             acc + money)
 
-  let amountIn currency transactions =
-    amount currency (transactions |> List.filter (isIn currency))
+  let amountIn balance =
+    amount balance.LocalCurrency (balance.Transactions |> List.filter (isIn balance.LocalCurrency))
 
-  let amountNotIn currency transactions =
-    amount currency (transactions |> List.filter (isNotIn currency))
-
-  type Balance =
-    { Transactions: Transaction list
-      LocalCurrency: Currency }
+  let amountNotIn balance =
+    amount balance.LocalCurrency (balance.Transactions |> List.filter (isNotIn balance.LocalCurrency))
 
 open Finance
 
@@ -73,7 +73,7 @@ module ProfitCalculator =
         Transactions = transaction :: balance.Transactions }
 
   let calculateTax balance =
-    match amountIn balance.LocalCurrency balance.Transactions with
+    match amountIn balance with
     | money when money.Amount < 0 -> { money with Amount = 0 }
     | money ->
       { money with
@@ -82,6 +82,6 @@ module ProfitCalculator =
   let calculateProfit balance =
     let tax = calculateTax balance
 
-    amountIn balance.LocalCurrency balance.Transactions
-    + amountNotIn balance.LocalCurrency balance.Transactions
+    amountIn balance
+    + amountNotIn balance
     + { tax with Amount = -tax.Amount }
