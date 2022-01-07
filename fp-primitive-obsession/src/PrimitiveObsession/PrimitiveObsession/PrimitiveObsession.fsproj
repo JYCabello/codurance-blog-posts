@@ -10,7 +10,8 @@
         <Compile Include="Finance\Currencies.fs" />
         <Compile Include="Finance\Trading.fs" />
         <Compile Include="Finance\Accounting.fs" />
-        <Compile Include="Library.fs" />
+        <Compile Include="Finance\Taxes.fs" />
+        <Compile Include="Finance\Profits.fs" />
     </ItemGroup>
 
 </Project>
