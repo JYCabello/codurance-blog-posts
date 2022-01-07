@@ -37,6 +37,11 @@ module Finance =
     | Incoming of Money
     | Outgoing of Money
 
+  let money =
+    function
+    | Incoming incoming -> incoming
+    | Outgoing outgoing -> outgoing
+
   type Balance =
     { Transactions: Transaction list
       LocalCurrency: Currency }
@@ -49,22 +54,22 @@ module Finance =
   let isNotIn currency = isIn currency >> not
 
   let private amount currency transactions =
-    let aggregate acc trx =
-      let money =
-        match trx with
-        | Incoming i -> i
-        | Outgoing o -> o
-
-      acc + money
+    let aggregate acc trx = acc + (trx |> money)
 
     ({ Amount = 0; Currency = currency }, transactions)
     ||> List.fold aggregate
 
   let amountIn balance =
-    amount balance.LocalCurrency (balance.Transactions |> List.filter (isIn balance.LocalCurrency))
+    amount
+      balance.LocalCurrency
+      (balance.Transactions
+       |> List.filter (isIn balance.LocalCurrency))
 
   let amountNotIn balance =
-    amount balance.LocalCurrency (balance.Transactions |> List.filter (isNotIn balance.LocalCurrency))
+    amount
+      balance.LocalCurrency
+      (balance.Transactions
+       |> List.filter (isNotIn balance.LocalCurrency))
 
 open Finance
 
