@@ -425,7 +425,7 @@ Functional programing is about referential transparency, which is the capacity o
 
 This made quite a few smells rather obvious.
 
-Finally, made some sub-modules. Could have made "Finance" a namespace and split the modules in files. Perhaps I'll do it in the repository INSERT LINK TO THE REPOSITORY
+Finally, made some sub-modules. Could have made "Finance" a namespace and split the modules in files. It's done in the repository INSERT LINK TO THE REPOSITORY
 ```fs
 module Finance =
   module Currencies =

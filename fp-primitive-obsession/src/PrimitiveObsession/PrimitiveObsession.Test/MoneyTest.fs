@@ -1,7 +1,7 @@
 ﻿module PrimitiveObsession.Test.MoneyTest
 
 open Xunit
-open PrimitiveObsession.Excercise.Finance.Currencies
+open PrimitiveObsession.Finance.Currencies
 
 
 [<Fact>]

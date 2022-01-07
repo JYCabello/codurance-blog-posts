@@ -1,7 +1,7 @@
 ﻿module PrimitiveObsession.Test.Excercise
 
-open PrimitiveObsession.Excercise
-open PrimitiveObsession.Excercise.Finance
+open PrimitiveObsession
+open PrimitiveObsession.Finance
 open Accounting
 open Currencies
 open Trading

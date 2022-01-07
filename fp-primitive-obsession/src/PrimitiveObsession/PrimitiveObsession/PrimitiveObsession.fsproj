@@ -7,6 +7,7 @@
 
     <ItemGroup>
         <Compile Include="LibraryOriginal.fs" />
+        <Compile Include="Finance\Currencies.fs" />
         <Compile Include="Library.fs" />
     </ItemGroup>
 
