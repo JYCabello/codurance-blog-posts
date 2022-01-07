@@ -208,8 +208,83 @@ type ProfitCalculator(localCurrency: Currency) =
 ### 6. Create classes Outgoing and Incoming implementing Item. Outgoing has negative amount
 Inheritance is disencouraged in FP, however discriminated unions, as you have seen...
 ```fs
+// I decided to call it transaction
 type Transaction =
 | Incoming of Money
 | Outgoing of Money
 ```
 This is really doing points 5 and 6.
+### 7. Change ProfitCalculator and its tests to use Item
+```fs
+type ProfitCalculator(localCurrency: Currency) =
+
+//...
+
+  member _.add transaction =
+    let money =
+      match transaction with
+      | Incoming i -> i
+      | Outgoing o -> { o with Amount = -o.Amount }
+
+    if money.Currency = localAmount.Currency then
+      do localAmount <- add localAmount money
+    else
+      do foreignAmount <- add foreignAmount money
+//...
+```
+Showing one of the tests for this for the sake of those unfamiliar with discriminated unions
+```fs
+[<Fact>]
+let ``Handles outgoins`` () =
+  let calculator = ProfitCalculator(GBP)
+
+  calculator.add
+  <| Incoming { Amount = 500; Currency = GBP }
+
+  calculator.add
+  <| Incoming { Amount = 80; Currency = USD }
+
+  calculator.add
+  <| Outgoing { Amount = 360; Currency = EUR }
+
+  Assert.Equal({ Amount = 150; Currency = GBP }, calculator.calculateProfit)
+  Assert.Equal({ Amount = 100; Currency = GBP }, calculator.calculateTax)
+```
+### 8. Create an Items first class collection and store each Item added to ProfitCalculator
+I cheated here, already saw that I was heading towards and assumed the advantages of having an items first class type would come automatically later on.
+### 9. Create boolean isIn(Currency) method in Item
+The tendency in FP is to separate data from logic, so implemented a function in the finance method that takes a currency and a transaction.
+```fs
+module Finance =
+//...
+  let isIn currency =
+    function
+    | Incoming i -> i.Currency = currency
+    | Outgoing o -> o.Currency = currency
+
+  // This is shorthand for:
+  let isIn currency transaction =
+    match transaction with
+    | Incoming i -> i.Currency = currency
+    | Outgoing o -> o.Currency = currency
+//...
+```
+For those coming from a more OOP background, I'll explain this a bit.
+The type of this function is:
+```fs
+Currency -> Transaction -> bool
+// This parameter order looks hard to read from a class method perspective,
+// because a method would look like:
+let inEuros = transaction.isIn(EUR)
+// And a regular tupled function would look like:
+let inEuros = isIn EUR transaction
+// F# allow us to pipe parameters:
+let inEuros =
+  transaction
+  |> isIn EUR
+// And to partially apply functions
+let isInEur = isIn EUR
+let inEuros =
+  transaction
+  |> isInEur
+```
