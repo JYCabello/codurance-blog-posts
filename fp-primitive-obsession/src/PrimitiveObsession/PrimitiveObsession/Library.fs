@@ -19,17 +19,13 @@ module Finance =
 
   let (>>=>) (a: Currency) (b: Currency) = ExchangeRate.get a / ExchangeRate.get b
 
-  let private applyRate amount rate =
-    match rate with
-    | Rate r -> ((amount |> float) / r) |> int
-
   type Money =
     { Amount: int
       Currency: Currency }
     static member (+)(local: Money, other: Money) =
-      let applyRate amount rate =
-        match rate with
-        | Rate r -> ((amount |> float) / r) |> int
+      let applyRate amount =
+        function
+        | Rate rate -> ((amount |> float) / rate) |> int
 
       other.Currency >>=> local.Currency
       |> applyRate other.Amount
