@@ -27,6 +27,10 @@ module Finance =
     { Amount: int
       Currency: Currency }
     static member (+)(local: Money, other: Money) =
+      let applyRate amount rate =
+        match rate with
+        | Rate r -> ((amount |> float) / r) |> int
+
       other.Currency >>=> local.Currency
       |> applyRate other.Amount
       |> fun amount ->
