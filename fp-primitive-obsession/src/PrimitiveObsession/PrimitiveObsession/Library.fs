@@ -2,9 +2,7 @@
 
 
 module Finance =
-
   module Currencies =
-
     type Currency =
       | GBP
       | USD
@@ -39,7 +37,6 @@ module Finance =
 
 
   module Trading =
-
     open Currencies
 
     type Transaction =
@@ -66,9 +63,9 @@ module Finance =
 
 
   module Accounting =
-
     open Currencies
     open Trading
+
     // The aforementioned entity, which will replace the Items collection suggested in the excercise.
     type Balance =
       { Transactions: Transactions
@@ -89,9 +86,9 @@ module Finance =
 
 
   module Taxes =
-
     open Accounting
     open Trading
+
     // It became obvious that the point of these functions was to get amounts to
     // be taxed or not.
     let taxableAmount balance =
@@ -110,7 +107,6 @@ module Finance =
 
 
   module Profits =
-
     open Accounting
     open Trading
     open Taxes

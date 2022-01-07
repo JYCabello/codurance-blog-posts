@@ -423,117 +423,137 @@ Simple enough, but we are not done, because this is not functional, calling `add
 ### 15. Make it functional
 Functional programing is about referential transparency, which is the capacity of replacing any function with certain parameters with its output. We cannot do that with an object that holds state and changes every time you perform a certain action, so we will have a new type, called `Balance` and we will have our `ProfitCalculator` become a set of operations over this data in order to calculate profit, returing a [new Balance](https://www.newbalance.com/) every time we add a transaction.
 
-This made quite a few smells rather obvious
+This made quite a few smells rather obvious.
+
+Finally, made some sub-modules. Could have made "Finance" a namespace and split the modules in files. Perhaps I'll do it in the repository INSERT LINK TO THE REPOSITORY
 ```fs
 module Finance =
-  type Currency =
-    | GBP
-    | USD
-    | EUR
+  module Currencies =
+    type Currency =
+      | GBP
+      | USD
+      | EUR
 
-  type ExchangeRate =
-    | Rate of float
+    type ExchangeRate =
+      | Rate of float
 
-    static member (/)(Rate a, Rate b) = (a / b) |> Rate
+      static member (/)(Rate a, Rate b) = (a / b) |> Rate
 
-    static member get =
-      function
-      | GBP -> Rate 1.0
-      | USD -> Rate 1.6
-      | EUR -> Rate 1.2
-
-  let (>>=>) (a: Currency) (b: Currency) = ExchangeRate.get a / ExchangeRate.get b
-
-  type Money =
-    { Amount: int
-      Currency: Currency }
-    static member (+)(local: Money, other: Money) =
-      let applyRate amount =
+      static member get =
         function
-        | Rate rate -> ((amount |> float) / rate) |> int
+        | GBP -> Rate 1.0
+        | USD -> Rate 1.6
+        | EUR -> Rate 1.2
 
-      other.Currency >>=> local.Currency
-      |> applyRate other.Amount
-      |> fun amount ->
-           { Amount = local.Amount + amount
-             Currency = local.Currency }
+    let (>>=>) (a: Currency) (b: Currency) = ExchangeRate.get a / ExchangeRate.get b
 
-  type Transaction =
-    | Incoming of Money
-    | Outgoing of Money
+    type Money =
+      { Amount: int
+        Currency: Currency }
+      static member (+)(local: Money, other: Money) =
+        let applyRate amount =
+          function
+          | Rate rate -> ((amount |> float) / rate) |> int
 
-  // The "money" function I skipped before, I found a use for it now.
-  let money =
-    function
-    | Incoming incoming -> incoming
-    | Outgoing outgoing -> outgoing
+        other.Currency >>=> local.Currency
+        |> applyRate other.Amount
+        |> fun amount ->
+             { Amount = local.Amount + amount
+               Currency = local.Currency }
 
-  // Ended up understanding that my "I see where I'm going" was wrong,
-  // introduced a first class collection for transactions.
-  type Transactions = Transactions of Transaction list
 
-  let (-->) transaction =
-    function
-    | Transactions transactions -> Transactions <| transaction :: transactions
+  module Trading =
+    open Currencies
 
-  let transactionList =
-    function
-    | Transactions transactions -> transactions
+    type Transaction =
+      | Incoming of Money
+      | Outgoing of Money
 
-  // The aforementioned entity, which will replace the Items collection suggested in the excercise.
-  type Balance =
-    { Transactions: Transactions
-      LocalCurrency: Currency }
+    // The "money" function I skipped before, I found a use for it now.
+    let money =
+      function
+      | Incoming incoming -> incoming
+      | Outgoing outgoing -> outgoing
 
-  let isIn currency transaction =
-    transaction
-    |> money
-    |> fun money -> money.Currency = currency
+    // Ended up understanding that my "I see where I'm going" was wrong,
+    // introduced a first class collection for transactions.
+    type Transactions = Transactions of Transaction list
 
-  let isNotIn currency = isIn currency >> not
+    let (-->>) transaction =
+      function
+      | Transactions transactions -> Transactions <| transaction :: transactions
 
-  let private amount currency transactions =
-    let aggregate acc trx = acc + (trx |> money)
+    let transactionList =
+      function
+      | Transactions transactions -> transactions
 
-    ({ Amount = 0; Currency = currency }, transactions)
-    ||> List.fold aggregate
 
-  // It became obvious that the point of these functions was to get amounts to
-  // be taxed or not.
-  let taxableAmount balance =
-    amount
-      balance.LocalCurrency
-      (balance.Transactions
-       |> transactionList
-       |> List.filter (isIn balance.LocalCurrency))
+  module Accounting =
+    open Currencies
+    open Trading
 
-  let taxFreeAmount balance =
-    amount
-      balance.LocalCurrency
-      (balance.Transactions
-       |> transactionList
-       |> List.filter (isNotIn balance.LocalCurrency))
+    // The aforementioned entity, which will replace the Items collection suggested in the excercise.
+    type Balance =
+      { Transactions: Transactions
+        LocalCurrency: Currency }
 
-open Finance
+    let isIn currency transaction =
+      transaction
+      |> money
+      |> fun money -> money.Currency = currency
 
-module ProfitCalculator =
-  let add transaction balance =
-    { balance with
-        Transactions = transaction --> balance.Transactions }
+    let isNotIn currency = isIn currency >> not
 
-  let calculateTax balance =
-    match taxableAmount balance with
-    | money when money.Amount < 0 -> { money with Amount = 0 }
-    | money ->
-      { money with
-          Amount = ((money.Amount |> float) * 0.2) |> int }
+    let amount currency transactions =
+      let aggregate acc trx = acc + (trx |> money)
 
-  let calculateProfit balance =
-    let tax = calculateTax balance
+      ({ Amount = 0; Currency = currency }, transactions)
+      ||> List.fold aggregate
 
-    taxableAmount balance
-    + taxFreeAmount balance
-    + { tax with Amount = -tax.Amount }
+
+  module Taxes =
+    open Accounting
+    open Trading
+
+    // It became obvious that the point of these functions was to get amounts to
+    // be taxed or not.
+    let taxableAmount balance =
+      amount
+        balance.LocalCurrency
+        (balance.Transactions
+         |> transactionList
+         |> List.filter (isIn balance.LocalCurrency))
+
+    let taxFreeAmount balance =
+      amount
+        balance.LocalCurrency
+        (balance.Transactions
+         |> transactionList
+         |> List.filter (isNotIn balance.LocalCurrency))
+
+
+  module Profits =
+    open Accounting
+    open Trading
+    open Taxes
+
+    let add transaction balance =
+      { balance with
+          Transactions = transaction -->> balance.Transactions }
+
+    let calculateTax balance =
+      match taxableAmount balance with
+      | money when money.Amount < 0 -> { money with Amount = 0 }
+      | money ->
+        { money with
+            Amount = ((money.Amount |> float) * 0.2) |> int }
+
+    let calculateProfit balance =
+      let tax = calculateTax balance
+
+      taxableAmount balance
+      + taxFreeAmount balance
+      + { tax with Amount = -tax.Amount }
 ```
 ## So, what about calisthenics?
 1. Only One Level Of Indentation Per Method ❔
