@@ -2,6 +2,9 @@
 
 open PrimitiveObsession.Excercise
 open PrimitiveObsession.Excercise.Finance
+open Accounting
+open Currencies
+open Trading
 open Xunit
 
 let gbpBalance =
