@@ -59,4 +59,39 @@ type ProfitCalculatorOriginal(localCurrency: string) =
   member this.calculateProfit =
     localAmount - this.calculateTax + foreignAmount
 ```
-###
+### 1. Introduce a Currency class or enum; Use it on ProfitCalculator.
+For these kind of situations, we use discriminated unions in F#:
+```fs
+type Currency =
+  | GBP
+  | USD
+  | EUR
+
+type ProfitCalculator(localCurrency: Currency) =
+  // As now we are using a discriminated union
+  // we match the currency instead of using an index
+  let getRate =
+    function
+    | GBP -> 1.0
+    | USD -> 1.6
+    | EUR -> 1.2
+
+  let mutable localAmount = 0
+  let mutable foreignAmount = 0
+
+  member _.add amount currency incoming =
+    let mutable realAmount: int = amount
+
+    let exchangeRate = (getRate currency) / (getRate localCurrency)
+
+    realAmount <- ((realAmount |> float) / exchangeRate) |> int
+
+    if not incoming then
+      do realAmount <- -realAmount
+
+    if localCurrency = currency then
+      do localAmount <- localAmount + realAmount
+    else
+      do foreignAmount <- foreignAmount + realAmount
+//...
+```
