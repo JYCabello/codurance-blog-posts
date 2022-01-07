@@ -1,5 +1,6 @@
 ﻿namespace PrimitiveObsession.Excercise
 
+
 module Finance =
   type Currency =
     | GBP
@@ -37,11 +38,14 @@ module Finance =
     | Incoming of Money
     | Outgoing of Money
 
+  // The "money" function I skipped before, I found a use for it now.
   let money =
     function
     | Incoming incoming -> incoming
     | Outgoing outgoing -> outgoing
 
+  // Ended up understanding that my "I see where I'm going" was wrong,
+  // introduced a first class collection for transactions.
   type Transactions = Transactions of Transaction list
 
   let (-->) transaction =
@@ -52,6 +56,7 @@ module Finance =
     function
     | Transactions transactions -> transactions
 
+  // The aforementioned entity, which will replace the Items collection suggested in the excercise.
   type Balance =
     { Transactions: Transactions
       LocalCurrency: Currency }
@@ -69,6 +74,8 @@ module Finance =
     ({ Amount = 0; Currency = currency }, transactions)
     ||> List.fold aggregate
 
+  // It became obvious that the point of these functions was to get amounts to
+  // be taxed or not.
   let taxableAmount balance =
     amount
       balance.LocalCurrency
