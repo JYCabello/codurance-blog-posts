@@ -4,7 +4,7 @@ I try to be consistent, and sometimes I make wild assesments that I love seeing 
 
 I was looking for a Kata to do as my onboarding in Codurance, since the whole katas and TDD it's been a core part of most of my career (I did got hooked on the Craftmanship concept many years ago, thanks to Sandro's book) and Chris suggested doing [primitive obsession](https://williamdurand.fr/2013/06/03/object-calisthenics/) with object calisthenics.
 
-Now, I can, sometimes (more than some) be what in Spain is called a "bocachancla" which would translate as a "big mouth" and I went on to state that I do FP and calisthenics is something that just happens automagically when you are doing so and he suggested to do so and write an article explaining why is that so. To make things more interesting, I would take a functional first language, F# is my weapon of choice.
+Now, I can, sometimes (more than some) be what in Spain is called a "bocachancla" which would translate as a "big mouth" and I went on to state that I do functional programing and calisthenics is something that just happens automagically when you are doing so and he suggested to do so and write an article explaining why is that so. To make things more interesting, I would take a functional first language, F# is my weapon of choice.
 
 I did the exercise, here is the article with a free spoiler: No, I did not end with a "calisthenistic" piece of code.
 
@@ -253,7 +253,7 @@ let ``Handles outgoins`` () =
 ### 8. Create an Items first class collection and store each Item added to ProfitCalculator
 I cheated here, already saw that I was heading towards and assumed the advantages of having an items first class type would come automatically later on.
 ### 9. Create boolean isIn(Currency) method in Item
-The tendency in FP is to separate data from logic, so implemented a function in the finance method that takes a currency and a transaction.
+The tendency in functional programing is to separate data from logic, so implemented a function in the finance method that takes a currency and a transaction.
 ```fs
 module Finance =
 //...
@@ -288,3 +288,258 @@ let inEuros =
   transaction
   |> isInEur
 ```
+### 10. Create Money amountIn(Currency) in Items
+```fs
+module Finance =
+//...
+  let amountIn currency transactions =
+    ({ Amount = 0; Currency = currency }, transactions |> List.filter (isIn currency))
+    ||> List.fold
+          (fun acc trx ->
+            let money =
+              match trx with
+              | Incoming i -> i
+              | Outgoing o -> o
+
+            add acc money)
+//...
+```
+### 11. Change ProfitCalculator.calculateTax() to use methods created in steps 9 and 10
+```fs
+type ProfitCalculator(localCurrency: Currency) =
+//...
+  member _.calculateTax =
+    match amountIn localAmount.Currency transactions with
+    | money when money.Amount < 0 -> { money with Amount = 0 }
+    | money ->
+      { money with
+          Amount = ((money.Amount |> float) * 0.2) |> int }
+//...
+```
+### 12. Remove localAmount field from ProfitCalculator, making necessary changes
+```fs
+module Finance =
+//...
+  type Money =
+    { Amount: int
+      Currency: Currency }
+
+    // Converted the "add" function to a "+" operator.
+    static member (+)(local: Money, other: Money) =
+      other.Currency >>=> local.Currency
+      |> applyRate other.Amount
+      |> fun amount ->
+           { Amount = local.Amount + amount
+             Currency = local.Currency }
+//...
+open Finance
+
+type ProfitCalculator(localCurrency: Currency) =
+
+  let mutable foreignAmount = { Amount = 0; Currency = localCurrency }
+  let mutable transactions: Transaction list = []
+
+  member _.add transaction =
+    transactions <- transaction :: transactions
+
+    let money =
+      match transaction with
+      | Incoming i -> i
+      | Outgoing o -> o
+
+    if money.Currency = localCurrency |> not then
+      do foreignAmount <- foreignAmount + money
+
+  member _.calculateTax =
+    match amountIn localCurrency transactions with
+    | money when money.Amount < 0 -> { money with Amount = 0 }
+    | money ->
+      { money with
+          Amount = ((money.Amount |> float) * 0.2) |> int }
+
+  member this.calculateProfit =
+    let tax = this.calculateTax
+    amountIn localCurrency transactions
+    + foreignAmount
+    + { tax with
+          Amount = -tax.Amount }
+```
+Saving the `Transaction list` bit, this is getting already pretty into the calisthenics domain.
+### 13. Create Items notIn(currency) and Money amountIn(Currency, ExchangeRates) in Items
+```fs
+module Finance =
+//...
+  let isIn currency =
+    function
+    | Incoming i -> i.Currency = currency
+    | Outgoing o -> o.Currency = currency
+
+  // Composing (>>) the function "isIn currency" with the function "not"
+  // gives us "isNotIn currency", talk about readability.
+  let isNotIn currency = isIn currency >> not
+
+  let private amount currency transactions =
+    ({ Amount = 0; Currency = currency }, transactions)
+    ||> List.fold
+          (fun acc trx ->
+            let money =
+              match trx with
+              | Incoming i -> i
+              | Outgoing o -> o
+
+            acc + money)
+
+  let amountIn currency transactions =
+    amount currency (transactions |> List.filter (isIn currency))
+
+  let amountNotIn currency transactions =
+    amount currency (transactions |> List.filter (isNotIn currency))
+//...
+```
+### 14. Simplify ProfitCalculator, removing all the logic from add(Item). calculateProfit() must be simple
+```fs
+type ProfitCalculator(localCurrency: Currency) =
+  let mutable transactions: Transaction list = []
+
+  member _.add transaction =
+    transactions <- transaction :: transactions
+
+  member _.calculateTax =
+    match amountIn localCurrency transactions with
+    | money when money.Amount < 0 -> { money with Amount = 0 }
+    | money ->
+      { money with
+          Amount = ((money.Amount |> float) * 0.2) |> int }
+
+  member this.calculateProfit =
+    let tax = this.calculateTax
+
+    amountIn localCurrency transactions
+    + amountNotIn localCurrency transactions
+    + { tax with
+          Amount = -this.calculateTax.Amount }
+```
+Simple enough, but we are not done, because this is not functional, calling `add` several times will give us different resuls, which leads us tho the final step:
+### 15. Make it functional
+Functional programing is about referential transparency, which is the capacity of replacing any function with certain parameters with its output. We cannot do that with an object that holds state and changes every time you perform a certain action, so we will have a new type, called `Balance` and we will have our `ProfitCalculator` become a set of operations over this data in order to calculate profit, returing a [new Balance](https://www.newbalance.com/) every time we add a transaction.
+
+This made quite a few smells rather obvious
+```fs
+module Finance =
+  type Currency =
+    | GBP
+    | USD
+    | EUR
+
+  type ExchangeRate =
+    | Rate of float
+
+    static member (/)(Rate a, Rate b) = (a / b) |> Rate
+
+    static member get =
+      function
+      | GBP -> Rate 1.0
+      | USD -> Rate 1.6
+      | EUR -> Rate 1.2
+
+  let (>>=>) (a: Currency) (b: Currency) = ExchangeRate.get a / ExchangeRate.get b
+
+  type Money =
+    { Amount: int
+      Currency: Currency }
+    static member (+)(local: Money, other: Money) =
+      let applyRate amount =
+        function
+        | Rate rate -> ((amount |> float) / rate) |> int
+
+      other.Currency >>=> local.Currency
+      |> applyRate other.Amount
+      |> fun amount ->
+           { Amount = local.Amount + amount
+             Currency = local.Currency }
+
+  type Transaction =
+    | Incoming of Money
+    | Outgoing of Money
+
+  // The aforementioned entity, which will replace the Items collection suggested in the excercise.
+  type Balance =
+    { Transactions: Transaction list
+      LocalCurrency: Currency }
+
+  // The "money" function I skipped before, I found a use for it now.
+  let money =
+    function
+    | Incoming incoming -> incoming
+    | Outgoing outgoing -> outgoing
+
+  let isIn currency transaction =
+    transaction
+    |> money
+    |> fun money -> money.Currency = currency
+
+  let isNotIn currency = isIn currency >> not
+
+  let private amount currency transactions =
+    let aggregate moneySoFar transaction = (transaction |> money) + moneySoFar
+
+    ({ Amount = 0; Currency = currency }, transactions)
+    ||> List.fold aggregate
+
+  // It became obvious that the point of these functions was to get amounts to
+  // be taxed or not.
+  let taxableAmount balance =
+    amount
+      balance.LocalCurrency
+      (balance.Transactions
+       |> List.filter (isIn balance.LocalCurrency))
+
+  let taxFreeAmount balance =
+    amount
+      balance.LocalCurrency
+      (balance.Transactions
+       |> List.filter (isNotIn balance.LocalCurrency))
+
+open Finance
+
+module ProfitCalculator =
+  let add transaction balance =
+    { balance with
+        Transactions = transaction :: balance.Transactions }
+
+  let calculateTax balance =
+    match taxableAmount balance with
+    | money when money.Amount < 0 -> { money with Amount = 0 }
+    | money ->
+      { money with
+          Amount = ((money.Amount |> float) * 0.2) |> int }
+
+  let calculateProfit balance =
+    let tax = calculateTax balance
+
+    taxableAmount balance
+    + { tax with Amount = -tax.Amount }
+    + taxFreeAmount balance
+```
+## So, what about calisthenics?
+1. Only One Level Of Indentation Per Method ❌
+
+    Not really in terms of actual indentation, but when it comes to the problem this point tries to solve: cognitive load, it does every line is a statement that collapses into a single type of value and every branch can be read independently of the rest of the function. In fact, everything that is indented is technically a single line, it's just a code convention indentation.
+
+    I did consider "cheating" and making them one liners, but it makes the code less readable, defeating the purpose of the point.
+1. Don’t Use The ELSE Keyword ❌
+
+    "Technically" not met, because there's quite a bit of pattern matching around and that's equivalent to switches with a siple return for every case. Again this rule is about reducing cognitive load and pattern matching does exactly that: Give you a single function to read per case, reducing the amount of code you have to load in your brain to understand what's going on.
+1. Wrap All Primitives And Strings ✅
+
+    That's quite trivial in F#, as you have seen.
+1. First Class Collections ❌
+
+    The push to separate data and logic in functional programming
+1. One Dot Per Line ✅
+1. Don’t Abbreviate ✅
+
+
+1. Keep All Entities Small ✅
+1. No Classes With More Than Two Instance Variables ✅
+1. No Getters/Setters/Properties ❌
