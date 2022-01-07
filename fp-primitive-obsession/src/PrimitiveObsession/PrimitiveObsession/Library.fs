@@ -19,7 +19,7 @@ module Finance =
 
   let (>>=>) (a: Currency) (b: Currency) = ExchangeRate.get a / ExchangeRate.get b
 
-  let applyRate amount rate =
+  let private applyRate amount rate =
     match rate with
     | Rate r -> ((amount |> float) / r) |> int
 
@@ -86,25 +86,3 @@ module ProfitCalculator =
     amountIn balance.LocalCurrency balance.Transactions
     + amountNotIn balance.LocalCurrency balance.Transactions
     + { tax with Amount = -tax.Amount }
-
-
-type ProfitCalculator(localCurrency: Currency) =
-  let mutable transactions: Transaction list = []
-
-  member _.add transaction =
-    transactions <- transaction :: transactions
-
-  member _.calculateTax =
-    match amountIn localCurrency transactions with
-    | money when money.Amount < 0 -> { money with Amount = 0 }
-    | money ->
-      { money with
-          Amount = ((money.Amount |> float) * 0.2) |> int }
-
-  member this.calculateProfit =
-    let tax = this.calculateTax
-
-    amountIn localCurrency transactions
-    + amountNotIn localCurrency transactions
-    + { tax with
-          Amount = -this.calculateTax.Amount }
