@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="LibraryOriginal.fs" />
+        <Compile Include="Finance\Currencies.fs" />
+        <Compile Include="Finance\Trading.fs" />
+        <Compile Include="Finance\Accounting.fs" />
+        <Compile Include="Finance\Taxes.fs" />
+        <Compile Include="Finance\Profits.fs" />
+    </ItemGroup>
+
+</Project>
