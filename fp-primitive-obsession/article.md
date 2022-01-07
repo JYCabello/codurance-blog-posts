@@ -536,22 +536,34 @@ module ProfitCalculator =
     + { tax with Amount = -tax.Amount }
 ```
 ## So, what about calisthenics?
-1. Only One Level Of Indentation Per Method ❌
+1. Only One Level Of Indentation Per Method ❔
 
     Not really in terms of actual indentation, but when it comes to the problem this point tries to solve: cognitive load, it does every line is a statement that collapses into a single type of value and every branch can be read independently of the rest of the function. In fact, everything that is indented is technically a single line, it's just a code convention indentation.
 
-    I did consider "cheating" and making them one liners, but it makes the code less readable, defeating the purpose of the point.
-1. Don’t Use The ELSE Keyword ❌
+    I did consider "cheating" and making them one liners, but it makes the code less readable, defeating the goal of reducing cognitive load.
+1. Don’t Use The ELSE Keyword ❔
 
     "Technically" not met, because there's quite a bit of pattern matching around and that's equivalent to switches with a siple return for every case. Again this rule is about reducing cognitive load and pattern matching does exactly that: Give you a single function to read per case, reducing the amount of code you have to load in your brain to understand what's going on.
 1. Wrap All Primitives And Strings ✅
-
-    That's quite trivial in F#, as you have seen.
 1. First Class Collections ✅
 1. One Dot Per Line ✅
 1. Don’t Abbreviate ✅
 
+    I didn't abbreviate, but this is, and I'm not trying to start a holy war here, possibly a pointless exercise. In an [impressively thorough study](http://www2.unibas.it/gscanniello/Giuseppe_Scanniello%40unibas/Home_files/TOSEM.pdf) from 2017, the team could find no difference on time taken or quality when it came to debugging. Mind you, the study was only about bug fixing, but it's the only empirical thing I've found about it.
 
+    It would seem like it's a matter of taste. I'm not advocating to abreviate, mind you, if there's no difference and we are already used to not doing, it's wasteful to change: Just pointing that this is the closest we have to a scientific conclusion on the subject.
 1. Keep All Entities Small ✅
 1. No Classes With More Than Two Instance Variables ✅
+
+    No mutation allowed, hence no instance variables whatsoever.
 1. No Getters/Setters/Properties ❌
+
+    No such tihng as setters, as records are immutable, but since logic and data live separatedly, records forcibly make their data readable.
+
+    Again, the purpose of the item is not violated. Encapsulation is meant to protect from unwanted access to data, but with immutability there's no real "access", but the creation of copies. Consumers of logic are in absolute control and functions are black boxes that take data and return other data, sometimes.
+
+Six out of nine points are thoroughly and easily met, other two are virtually met and the last one is unnatainable at the core of the paradigm, but the goal chased is achieved in other way.
+
+Functional programming is a paradigm that comes at a cost. Functional code is usually slower, the initial learning curve is quite steep and requires a complete rewiring of some hard-earned muscle memory, but the value we get out of it on a regular basis is the same we get of some extreme design exercise.
+
+I can be a "bocachancla" but I think I got away with this one.
