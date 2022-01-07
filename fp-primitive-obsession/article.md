@@ -468,6 +468,8 @@ module Finance =
     | Incoming incoming -> incoming
     | Outgoing outgoing -> outgoing
 
+  // Ended up understanding that my "I see where I'm going" was wrong,
+  // introduced a first class collection for transactions.
   type Transactions = Transactions of Transaction list
 
   let (-->) transaction =
@@ -480,7 +482,7 @@ module Finance =
 
   // The aforementioned entity, which will replace the Items collection suggested in the excercise.
   type Balance =
-    { Transactions: Transaction list
+    { Transactions: Transactions
       LocalCurrency: Currency }
 
   let isIn currency transaction =
@@ -545,9 +547,7 @@ module ProfitCalculator =
 1. Wrap All Primitives And Strings ✅
 
     That's quite trivial in F#, as you have seen.
-1. First Class Collections ❌
-
-    The push to separate data and logic in functional programming makes makes this point counterproductive towards FP. Still, the goal is achieved
+1. First Class Collections ✅
 1. One Dot Per Line ✅
 1. Don’t Abbreviate ✅
 
