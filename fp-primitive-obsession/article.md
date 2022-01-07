@@ -425,7 +425,7 @@ Functional programing is about referential transparency, which is the capacity o
 
 This made quite a few smells rather obvious.
 
-Finally, made some sub-modules. Could have made "Finance" a namespace and split the modules in files. It's done in the [repository](https://github.com/JYCabello/codurance-blog-posts/tree/main/fp-primitive-obsession).
+Finally, made some sub-modules. Turned `Finance` into a namespace and split the modules in files, but only in the [repository](https://github.com/JYCabello/codurance-blog-posts/tree/main/fp-primitive-obsession).
 ```fs
 module Finance =
   module Currencies =
@@ -586,4 +586,4 @@ Six out of nine points are thoroughly and easily met, other two are virtually me
 
 Functional programming is a paradigm that comes at a cost. Functional code is usually slower, the initial learning curve is quite steep and requires a complete rewiring of some hard-earned muscle memory, but the value we get out of it on a regular basis is the same we get of some extreme design exercise.
 
-I can be a "bocachancla" but I think I got away with this one.
+I can be a "bocachancla" but I might get away with this one.
