@@ -1,33 +1,7 @@
-﻿namespace PrimitiveObsession
-open Finance.Currencies
-
-
-module Trading =
-
-  type Transaction =
-    | Incoming of Money
-    | Outgoing of Money
-
-  // The "money" function I skipped before, I found a use for it now.
-  let money =
-    function
-    | Incoming incoming -> incoming
-    | Outgoing outgoing -> outgoing
-
-  // Ended up understanding that my "I see where I'm going" was wrong,
-  // introduced a first class collection for transactions.
-  type Transactions = Transactions of Transaction list
-
-  let (-->>) transaction =
-    function
-    | Transactions transactions -> Transactions <| transaction :: transactions
-
-  let transactionList =
-    function
-    | Transactions transactions -> transactions
-
+﻿namespace PrimitiveObsession.Finance
 
 module Accounting =
+  open Currencies
   open Trading
 
   // The aforementioned entity, which will replace the Items collection suggested in the excercise.
