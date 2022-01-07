@@ -253,7 +253,7 @@ let ``Handles outgoins`` () =
 ### 8. Create an Items first class collection and store each Item added to ProfitCalculator
 I cheated here, already saw that I was heading towards and assumed the advantages of having an items first class type would come automatically later on.
 ### 9. Create boolean isIn(Currency) method in Item
-The tendency in functional programing is to separate data from logic, so implemented a function in the finance method that takes a currency and a transaction.
+The tendency in functional programing is to separate data from logic, so implemented a function in the finance module that takes a currency and a transaction.
 ```fs
 module Finance =
 //...
