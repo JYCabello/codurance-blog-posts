@@ -204,3 +204,12 @@ type ProfitCalculator(localCurrency: Currency) =
     |> add localAmount
     |> add { this.calculateTax with Amount = -this.calculateTax.Amount }
 ```
+### 5. Create an abstract Item class with the method Money amount();
+### 6. Create classes Outgoing and Incoming implementing Item. Outgoing has negative amount
+Inheritance is disencouraged in FP, however discriminated unions, as you have seen...
+```fs
+type Transaction =
+| Incoming of Money
+| Outgoing of Money
+```
+This is really doing points 5 and 6.
