@@ -535,7 +535,7 @@ module ProfitCalculator =
     That's quite trivial in F#, as you have seen.
 1. First Class Collections ❌
 
-    The push to separate data and logic in functional programming
+    The push to separate data and logic in functional programming makes makes this point counterproductive towards FP. Still, the goal is achieved
 1. One Dot Per Line ✅
 1. Don’t Abbreviate ✅
 
