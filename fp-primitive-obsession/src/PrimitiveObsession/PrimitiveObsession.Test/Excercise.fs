@@ -5,11 +5,11 @@ open PrimitiveObsession.Excercise.Finance
 open Xunit
 
 let gbpBalance =
-  { Transactions = []
+  { Transactions = [] |> Transactions
     LocalCurrency = GBP }
 
 let eurBalance =
-  { Transactions = []
+  { Transactions = [] |> Transactions
     LocalCurrency = EUR }
 
 [<Fact>]
