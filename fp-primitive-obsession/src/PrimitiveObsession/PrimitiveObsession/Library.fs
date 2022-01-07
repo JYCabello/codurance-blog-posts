@@ -2,7 +2,9 @@
 
 
 module Finance =
+
   module Currencies =
+
     type Currency =
       | GBP
       | USD
@@ -35,9 +37,11 @@ module Finance =
              { Amount = local.Amount + amount
                Currency = local.Currency }
 
+
   module Trading =
 
     open Currencies
+
     type Transaction =
       | Incoming of Money
       | Outgoing of Money
@@ -59,6 +63,7 @@ module Finance =
     let transactionList =
       function
       | Transactions transactions -> transactions
+
 
   module Accounting =
 
@@ -82,6 +87,7 @@ module Finance =
       ({ Amount = 0; Currency = currency }, transactions)
       ||> List.fold aggregate
 
+
   module Taxes =
 
     open Accounting
@@ -102,25 +108,27 @@ module Finance =
          |> transactionList
          |> List.filter (isNotIn balance.LocalCurrency))
 
-open Finance.Trading
-open Finance.Accounting
-open Finance.Taxes
 
-module ProfitCalculator =
-  let add transaction balance =
-    { balance with
-        Transactions = transaction -->> balance.Transactions }
+  module Profits =
 
-  let calculateTax balance =
-    match taxableAmount balance with
-    | money when money.Amount < 0 -> { money with Amount = 0 }
-    | money ->
-      { money with
-          Amount = ((money.Amount |> float) * 0.2) |> int }
+    open Accounting
+    open Trading
+    open Taxes
 
-  let calculateProfit balance =
-    let tax = calculateTax balance
+    let add transaction balance =
+      { balance with
+          Transactions = transaction -->> balance.Transactions }
 
-    taxableAmount balance
-    + taxFreeAmount balance
-    + { tax with Amount = -tax.Amount }
+    let calculateTax balance =
+      match taxableAmount balance with
+      | money when money.Amount < 0 -> { money with Amount = 0 }
+      | money ->
+        { money with
+            Amount = ((money.Amount |> float) * 0.2) |> int }
+
+    let calculateProfit balance =
+      let tax = calculateTax balance
+
+      taxableAmount balance
+      + taxFreeAmount balance
+      + { tax with Amount = -tax.Amount }
