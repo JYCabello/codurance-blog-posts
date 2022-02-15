@@ -2,7 +2,6 @@
 
 module Taxes =
   open Accounting
-  open Trading
 
   // It became obvious that the point of these functions was to get amounts to
   // be taxed or not.
@@ -10,12 +9,10 @@ module Taxes =
     amount
       balance.LocalCurrency
       (balance.Transactions
-       |> transactionList
-       |> List.filter (isIn balance.LocalCurrency))
+       |> inCurrency balance.LocalCurrency)
 
   let taxFreeAmount balance =
     amount
       balance.LocalCurrency
       (balance.Transactions
-       |> transactionList
-       |> List.filter (isNotIn balance.LocalCurrency))
+       |> notInCurrency balance.LocalCurrency)
